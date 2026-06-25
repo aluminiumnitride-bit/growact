@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reflect — ACT &amp; GROW</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+/* ============================================================
+   CONFIG NOTE FOR TEACHER:
+   Set your Google Apps Script /exec URL in the SCRIPT_URL constant
+   near the top of the <script> block at the bottom of this file.
+   ============================================================ */
+
+:root{
+  --ink:#16203f;
+  --ink-soft:#3a466a;
+  --muted:#6b7689;
+  --line:#dfe4ec;
+  --paper:#ffffff;
+  --bg-1:#eef1f6;
+  --bg-2:#e1e7f0;
+  --bg-3:#d6deea;
+
+  /* GROW theme */
+  --grow-green:#1f9d76;
+  --grow-green-d:#157a5b;
+  --grow-glow:#39c79c;
+  --grow-rose:#d6336c;
+  --grow-mist:#aeb8d6;
+
+  /* ACT theme */
+  --act-navy:#15205c;
+  --act-yellow:#ffcf2e;
+  --act-red:#e23b3b;
+
+  --accent:var(--grow-green);
+  --accent-d:var(--grow-green-d);
+  --radius:18px;
+  --shadow-sm:0 1px 2px rgba(22,32,63,.06), 0 4px 14px rgba(22,32,63,.06);
+  --shadow-md:0 8px 30px rgba(22,32,63,.12);
+  --shadow-lg:0 20px 60px rgba(22,32,63,.18);
+  --font-display:"Bricolage Grotesque", system-ui, sans-serif;
+  --font-body:"Inter", system-ui, sans-serif;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font-body);
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(57,199,156,.10), transparent 60%),
+    radial-gradient(900px 500px at -5% 110%, rgba(21,32,92,.10), transparent 55%),
+    linear-gradient(180deg, var(--bg-1), var(--bg-2) 55%, var(--bg-3));
+  min-height:100%;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+.wrap{max-width:780px; margin:0 auto; padding:28px 20px 64px;}
+.screen{display:none; animation:rise .5s cubic-bezier(.2,.7,.2,1) both;}
+.screen.active{display:block;}
+
+@keyframes rise{from{opacity:0; transform:translateY(14px)} to{opacity:1; transform:none}}
+@keyframes fade{from{opacity:0} to{opacity:1}}
+
+/* ---------- top brand ---------- */
+.brand{display:flex; align-items:center; gap:11px; margin-bottom:30px;}
+.brand .dot{width:30px; height:30px; border-radius:9px; background:linear-gradient(140deg,var(--grow-green),var(--act-navy)); position:relative; box-shadow:var(--shadow-sm); flex:none;}
+.brand .dot::after{content:""; position:absolute; inset:8px; border-radius:50%; border:2px solid #fff; opacity:.85;}
+.brand b{font-family:var(--font-display); font-weight:700; letter-spacing:-.01em; font-size:18px;}
+.brand span{color:var(--muted); font-size:13px; font-weight:500;}
+
+.eyebrow{font-size:12px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);}
+
+/* ---------- choose screen ---------- */
+.lede h1{font-family:var(--font-display); font-weight:700; font-size:clamp(28px,6vw,42px); line-height:1.04; letter-spacing:-.02em; margin:10px 0 10px;}
+.lede p{color:var(--ink-soft); font-size:16px; max-width:46ch; margin-bottom:26px;}
+
+.tiles{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+@media(max-width:560px){.tiles{grid-template-columns:1fr;}}
+
+.tile{
+  position:relative; overflow:hidden; cursor:pointer;
+  border:1px solid var(--line); border-radius:24px; padding:26px 22px 24px;
+  background:var(--paper); box-shadow:var(--shadow-sm);
+  transition:transform .35s cubic-bezier(.2,.7,.2,1), box-shadow .35s, border-color .35s;
+  text-align:left; width:100%; font:inherit; color:inherit;
+}
+.tile:hover{transform:translateY(-5px); box-shadow:var(--shadow-md);}
+.tile:focus-visible{outline:3px solid var(--accent); outline-offset:3px;}
+.tile .kind{font-size:12px; font-weight:600; letter-spacing:.14em; text-transform:uppercase;}
+.tile h2{font-family:var(--font-display); font-weight:800; font-size:40px; letter-spacing:-.02em; margin:6px 0 2px; line-height:1;}
+.tile .tag{font-size:14px; color:var(--muted);}
+.tile .desc{margin-top:14px; font-size:14px; color:var(--ink-soft); line-height:1.5;}
+.tile .go{margin-top:18px; display:inline-flex; align-items:center; gap:7px; font-weight:600; font-size:14px;}
+.tile .go svg{transition:transform .3s;}
+.tile:hover .go svg{transform:translateX(4px);}
+
+.tile.grow{--accent:var(--grow-green); --accent-d:var(--grow-green-d);}
+.tile.grow .kind{color:var(--grow-green-d);}
+.tile.grow h2{color:var(--grow-rose);}
+.tile.grow .go{color:var(--grow-green-d);}
+.tile.grow:hover{border-color:var(--grow-glow);}
+.tile.act{--accent:var(--act-navy);}
+.tile.act .kind{color:var(--act-navy);}
+.tile.act h2{color:var(--act-navy);}
+.tile.act .go{color:var(--act-navy);}
+.tile.act:hover{border-color:var(--act-navy);}
+
+/* GROW orbit motif */
+.orbit{position:absolute; top:-26px; right:-26px; width:120px; height:120px; opacity:.5;}
+.orbit .ring{position:absolute; inset:0; border-radius:50%; border:1.5px dashed var(--grow-mist);}
+.orbit .bead{position:absolute; width:16px; height:16px; border-radius:50%; background:var(--grow-green); color:#fff; font-size:9px; font-weight:700; display:grid; place-items:center; font-family:var(--font-display);}
+.orbit .spin{position:absolute; inset:0; animation:spin 24s linear infinite;}
+.orbit .b1{top:-8px; left:50%; margin-left:-8px;}
+.orbit .b2{right:-8px; top:50%; margin-top:-8px; background:var(--grow-rose);}
+.orbit .b3{bottom:-8px; left:50%; margin-left:-8px;}
+.orbit .b4{left:-8px; top:50%; margin-top:-8px; background:var(--act-navy);}
+
+/* ACT cycle motif */
+.cycle{position:absolute; top:-22px; right:-22px; width:118px; height:118px; opacity:.55;}
+.cycle .seg{position:absolute; inset:0; border-radius:50%; border:9px solid transparent; }
+.cycle .s1{border-top-color:var(--act-yellow); border-right-color:var(--act-yellow); transform:rotate(8deg);}
+.cycle .s2{border-bottom-color:var(--act-red); border-right-color:var(--act-red); transform:rotate(8deg);}
+.cycle .s3{border-bottom-color:var(--act-navy); border-left-color:var(--act-navy); transform:rotate(8deg);}
+.cycle .spin{position:absolute; inset:0; animation:spin 30s linear infinite;}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- panels (identity + flow) ---------- */
+.panel{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:26px 24px;}
+.crumb{display:flex; align-items:center; gap:10px; margin-bottom:18px;}
+.pill{font-family:var(--font-display); font-weight:800; width:38px; height:38px; border-radius:11px; display:grid; place-items:center; color:#fff; background:var(--accent); font-size:18px; flex:none;}
+.crumb .meta b{display:block; font-family:var(--font-display); font-weight:700; font-size:18px; letter-spacing:-.01em;}
+.crumb .meta span{font-size:13px; color:var(--muted);}
+
+label.fld{display:block; margin-top:16px;}
+label.fld .lab{font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; display:block;}
+input[type=text], textarea{
+  width:100%; font:inherit; color:var(--ink); background:#fbfcfe;
+  border:1.5px solid var(--line); border-radius:12px; padding:12px 14px; resize:vertical;
+  transition:border-color .2s, box-shadow .2s, background .2s;
+}
+input[type=text]{height:46px;}
+textarea{min-height:84px; line-height:1.5;}
+input:focus, textarea:focus{outline:none; border-color:var(--accent); background:#fff; box-shadow:0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent);}
+.q{margin-top:20px;}
+.q .qlab{font-size:15px; font-weight:600; color:var(--ink); margin-bottom:8px; line-height:1.4;}
+.q .qnum{color:var(--accent-d); font-weight:700; margin-right:6px;}
+
+.hint{font-size:13px; color:var(--act-red); margin-top:8px; display:none;}
+.hint.show{display:block; animation:fade .2s both;}
+
+/* progress */
+.steps{display:flex; gap:7px; margin:4px 0 22px;}
+.steps i{height:6px; flex:1; border-radius:99px; background:var(--line); transition:background .3s;}
+.steps i.done{background:var(--accent);}
+.steps i.now{background:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%, transparent);}
+
+.elhead{margin-bottom:4px;}
+.elhead .ekind{font-size:12px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-d);}
+.elhead h3{font-family:var(--font-display); font-weight:700; font-size:23px; letter-spacing:-.01em; margin:3px 0 4px;}
+.elhead p{color:var(--muted); font-size:14px;}
+
+.row{display:flex; gap:12px; margin-top:26px;}
+.btn{font:inherit; font-weight:600; cursor:pointer; border-radius:12px; padding:13px 22px; border:1.5px solid transparent; transition:transform .15s, box-shadow .2s, background .2s, opacity .2s;}
+.btn:active{transform:translateY(1px);}
+.btn:focus-visible{outline:3px solid var(--accent); outline-offset:2px;}
+.btn-primary{background:var(--accent); color:#fff; box-shadow:var(--shadow-sm); flex:1;}
+.btn-primary:hover{background:var(--accent-d);}
+.btn-ghost{background:transparent; border-color:var(--line); color:var(--ink-soft);}
+.btn-ghost:hover{border-color:var(--accent); color:var(--accent-d);}
+.btn[disabled]{opacity:.5; cursor:not-allowed;}
+
+.namebar{display:flex; align-items:center; gap:10px; font-size:13px; color:var(--muted); margin-bottom:14px;}
+.namebar svg{flex:none;}
+.namebar b{color:var(--ink-soft); font-weight:600;}
+
+/* ---------- card ---------- */
+.card-stage{display:flex; flex-direction:column; align-items:center;}
+.card{
+  width:100%; max-width:680px; background:var(--paper); border-radius:24px;
+  box-shadow:var(--shadow-lg); overflow:hidden; border:1px solid var(--line);
+}
+.card-top{position:relative; padding:30px 30px 26px; color:#fff; overflow:hidden;}
+.card.grow .card-top{background:linear-gradient(135deg, #1c8e6c 0%, #15776a 55%, #1d3a6e 120%);}
+.card.act .card-top{background:linear-gradient(135deg, #15205c 0%, #20307f 60%, #2a1356 120%);}
+.card-top .glyph{position:absolute; right:-30px; top:-30px; width:190px; height:190px; opacity:.16;}
+.card-top .ribbon{font-size:12px; font-weight:600; letter-spacing:.16em; text-transform:uppercase; opacity:.85;}
+.card-top .word{font-family:var(--font-display); font-weight:800; font-size:46px; letter-spacing:-.02em; line-height:1; margin:6px 0 2px;}
+.card.grow .card-top .word{color:#ffe1ec;}
+.card-top .belief{font-size:14px; opacity:.9; font-style:italic;}
+.card-top .who{margin-top:18px; display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;}
+.card-top .who b{font-family:var(--font-display); font-weight:700; font-size:20px;}
+.card-top .who span{font-size:13px; opacity:.85;}
+.card-top .date{margin-left:auto; font-size:12px; opacity:.8;}
+
+.card-body{padding:24px 30px 8px;}
+.sec-label{font-size:12px; font-weight:700; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); margin:18px 0 12px;}
+.sec-label:first-child{margin-top:6px;}
+
+.refl{border-left:3px solid var(--line); padding-left:16px; margin-bottom:16px;}
+.refl .rk{font-family:var(--font-display); font-weight:700; font-size:15px; color:var(--ink);}
+.refl .rk em{font-style:normal; color:var(--accent-d);}
+.refl .ra{margin-top:5px;}
+.refl .ra .qq{font-size:12.5px; color:var(--muted); margin-top:8px;}
+.refl .ra .aa{font-size:14.5px; color:var(--ink); line-height:1.5; margin-top:2px;}
+
+.voice{background:color-mix(in srgb, var(--accent) 8%, #fff); border:1px solid color-mix(in srgb,var(--accent) 22%, var(--line)); border-radius:16px; padding:18px 20px; margin:6px 0 4px; position:relative;}
+.voice .qm{font-family:var(--font-display); font-size:46px; line-height:.6; color:var(--accent); opacity:.5; height:24px;}
+.voice p{font-size:15px; line-height:1.55; color:var(--ink); margin-top:4px;}
+.voice .sig{margin-top:10px; font-size:13px; font-weight:600; color:var(--accent-d);}
+
+.focus{margin:16px 0 6px; border-radius:16px; padding:20px; background:linear-gradient(135deg, var(--accent), var(--accent-d)); color:#fff; box-shadow:var(--shadow-sm);}
+.card.act .focus{background:linear-gradient(135deg, var(--act-navy), #2a1356);}
+.focus .fl{font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; opacity:.85;}
+.focus h4{font-family:var(--font-display); font-weight:700; font-size:19px; margin:6px 0 8px; line-height:1.25;}
+.focus p{font-size:14.5px; line-height:1.55; opacity:.96;}
+.card.grow .focus{ --accent: var(--grow-green); }
+
+.card-foot{padding:14px 30px 24px; display:flex; align-items:center; gap:10px; color:var(--muted); font-size:12px;}
+.card-foot .mk{width:22px;height:22px;border-radius:7px;background:linear-gradient(140deg,var(--grow-green),var(--act-navy));flex:none;}
+
+.card-actions{display:flex; gap:12px; margin-top:24px; width:100%; max-width:680px;}
+.save-state{font-size:13px; color:var(--muted); margin-top:14px; text-align:center; min-height:18px;}
+.save-state.ok{color:var(--grow-green-d);}
+.save-state.warn{color:var(--act-red);}
+
+footer.legal{text-align:center; color:var(--muted); font-size:12px; margin-top:40px; line-height:1.6;}
+
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+}
+@media print{ body{background:#fff;} .card-actions,.brand,.namebar{display:none;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="dot"></div>
+    <div>
+      <b>Reflect</b> <span>· ACT &amp; GROW</span>
+    </div>
+  </div>
+
+  <!-- ============ SCREEN 1: CHOOSE ============ -->
+  <section id="screen-choose" class="screen active">
+    <div class="lede">
+      <div class="eyebrow">Take a few minutes for yourself</div>
+      <h1>Which kind of thinking are you doing today?</h1>
+      <p>Pick one. You'll answer a short set of questions and walk away with a card you can keep for revision — written just for you.</p>
+    </div>
+    <div class="tiles">
+      <button class="tile grow" data-fw="GROW" aria-label="Choose GROW: reflect on your learning">
+        <div class="orbit"><div class="ring"></div><div class="spin">
+          <div class="bead b1">G</div><div class="bead b2">R</div><div class="bead b3">O</div><div class="bead b4">W</div>
+        </div></div>
+        <div class="kind">Reflect on learning</div>
+        <h2>GROW</h2>
+        <div class="tag">Believe you can</div>
+        <div class="desc">Celebrate what clicked, name what's still fuzzy, and look ahead to what's next.</div>
+        <div class="go">Start GROW <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      </button>
+
+      <button class="tile act" data-fw="ACT" aria-label="Choose ACT: respond to feedback">
+        <div class="cycle"><div class="spin"><div class="seg s1"></div><div class="seg s2"></div><div class="seg s3"></div></div></div>
+        <div class="kind">Respond to feedback</div>
+        <h2>ACT</h2>
+        <div class="tag">Act on feedback</div>
+        <div class="desc">Acknowledge how it lands, connect it to your goals, then decide what you'll change.</div>
+        <div class="go">Start ACT <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 2: IDENTITY ============ -->
+  <section id="screen-identity" class="screen">
+    <div class="panel">
+      <div class="crumb">
+        <div class="pill" id="id-pill">G</div>
+        <div class="meta"><b id="id-title">Let's start</b><span id="id-sub">First, who's reflecting?</span></div>
+      </div>
+      <label class="fld">
+        <span class="lab">Your name</span>
+        <input type="text" id="in-name" autocomplete="name" placeholder="e.g. Priya Menon" />
+      </label>
+      <label class="fld">
+        <span class="lab">Your class</span>
+        <input type="text" id="in-class" placeholder="e.g. 3E2" />
+      </label>
+      <div class="hint" id="id-hint">Please add your name and class so your teacher can see your reflection.</div>
+      <div class="row">
+        <button class="btn btn-ghost" id="id-back">Back</button>
+        <button class="btn btn-primary" id="id-next">Begin</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 3: FLOW ============ -->
+  <section id="screen-flow" class="screen">
+    <div class="namebar">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <span><b id="fl-name">—</b> · <span id="fl-class">—</span></span>
+    </div>
+    <div class="steps" id="fl-steps"></div>
+    <div class="panel">
+      <div class="elhead">
+        <div class="ekind" id="fl-kind">Element</div>
+        <h3 id="fl-elname">—</h3>
+        <p id="fl-elmean">—</p>
+      </div>
+      <div id="fl-questions"></div>
+      <div class="hint" id="fl-hint">Try to write something for each — even a sentence is enough.</div>
+      <div class="row">
+        <button class="btn btn-ghost" id="fl-back">Back</button>
+        <button class="btn btn-primary" id="fl-next">Next</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 4: CARD ============ -->
+  <section id="screen-card" class="screen">
+    <div class="card-stage">
+      <div class="card" id="the-card"><!-- built dynamically --></div>
+      <div class="card-actions">
+        <button class="btn btn-ghost" id="card-restart">Start again</button>
+        <button class="btn btn-primary" id="card-download">Download my card</button>
+      </div>
+      <div class="save-state" id="save-state"></div>
+    </div>
+  </section>
+
+  <footer class="legal">
+    Your reflection is shared with your teacher to support your learning.<br/>
+    Keep your card somewhere you'll see it before your next assessment.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   1) PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL BELOW.
+      It looks like: https://script.google.com/macros/s/XXXX/exec
+      Leave as "" to run without saving (the card still works).
+   ============================================================ */
+const SCRIPT_URL = "";
+
+/* ---------------- framework data ---------------- */
+const FRAMEWORKS = {
+  GROW: {
+    name:"GROW", kind:"Reflect on learning", belief:"Believe you can",
+    theme:"grow",
+    elements:[
+      {key:"G", title:"Gift yourself success", mean:"Celebrate what you now understand.",
+       q:["What is one thing I understand from the lesson?","How would I teach or explain this to a friend?"]},
+      {key:"R", title:"Rise above with small steps", mean:"Name a gap, then a small step forward.",
+       q:["What is one thing I do not yet understand?","What will I do to improve?"]},
+      {key:"O", title:"Own your knowledge", mean:"Make it real and share it.",
+       q:["What is one real-life example?","How have I shared this with a friend or family?"]},
+      {key:"W", title:"Watch for what comes next", mean:"Look ahead to the next topic.",
+       q:["What do I already know about the next topic?","What is coming up at the next lesson?"]}
+    ],
+    focusIndex:1 // Rise
+  },
+  ACT: {
+    name:"ACT", kind:"Respond to feedback", belief:"Act on feedback",
+    theme:"act",
+    elements:[
+      {key:"A", title:"Acknowledge", mean:"Notice how the feedback lands.",
+       q:["How do I feel about the feedback?","How might the feedback help me learn better?"]},
+      {key:"C", title:"Connect", mean:"Link it to your goals and past feedback.",
+       q:["How does this connect with the success criteria and/or my goals?","How does this connect with previous feedback?"]},
+      {key:"T", title:"Test", mean:"Decide what you will change.",
+       q:["What habit do I need to adjust, and what is one thing I will do differently?","How will I know I am improving?"]}
+    ],
+    focusIndex:2 // Test
+  }
+};
+
+/* ---------------- state ---------------- */
+const state = { fw:null, name:"", cls:"", step:0, answers:{} };
+let seed = 0;
+
+/* ---------------- helpers ---------------- */
+const $ = (s,root=document)=>root.querySelector(s);
+const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
+function show(id){ $$(".screen").forEach(s=>s.classList.remove("active")); $("#"+id).classList.add("active"); window.scrollTo({top:0,behavior:"smooth"}); }
+function setTheme(t){
+  const r=document.documentElement;
+  if(t==="act"){ r.style.setProperty("--accent","var(--act-navy)"); r.style.setProperty("--accent-d","#0e1640"); }
+  else { r.style.setProperty("--accent","var(--grow-green)"); r.style.setProperty("--accent-d","var(--grow-green-d)"); }
+}
+function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function clip(s,n=14){ // trim a student answer to a short inline snippet
+  let t=(s||"").trim().replace(/\s+/g," ").replace(/[.!?,;]+$/,"");
+  const w=t.split(" ");
+  if(w.length>n) t=w.slice(0,n).join(" ")+"…";
+  return t;
+}
+function lower1(s){ s=(s||"").trim(); return s ? s[0].toLowerCase()+s.slice(1) : s; }
+function pick(arr){ // deterministic pick using seed
+  return arr[Math.abs(seed)%arr.length];
+}
+function pick2(arr){ return arr[Math.abs(Math.floor(seed/7))%arr.length]; }
+function ans(elIdx,qIdx){ return (state.answers[elIdx]&&state.answers[elIdx][qIdx]||"").trim(); }
+
+/* ---------------- choose ---------------- */
+$$(".tile").forEach(t=>t.addEventListener("click",()=>{
+  state.fw = t.dataset.fw;
+  state.answers = {};
+  const fw = FRAMEWORKS[state.fw];
+  setTheme(fw.theme);
+  $("#id-pill").textContent = fw.elements[0].key;
+  $("#id-title").textContent = "You chose "+fw.name;
+  $("#id-sub").textContent = fw.kind+" · "+fw.belief;
+  show("screen-identity");
+  setTimeout(()=>$("#in-name").focus(),350);
+}));
+
+/* ---------------- identity ---------------- */
+$("#id-back").addEventListener("click",()=>show("screen-choose"));
+$("#id-next").addEventListener("click",()=>{
+  const n=$("#in-name").value.trim(), c=$("#in-class").value.trim();
+  if(!n||!c){ $("#id-hint").classList.add("show"); return; }
+  $("#id-hint").classList.remove("show");
+  state.name=n; state.cls=c; state.step=0;
+  seed = (n+c+Date.now()).split("").reduce((a,ch)=>a+ch.charCodeAt(0),0);
+  $("#fl-name").textContent=n; $("#fl-class").textContent=c;
+  buildSteps(); renderStep(); show("screen-flow");
+});
+[$("#in-name"),$("#in-class")].forEach(i=>i.addEventListener("keydown",e=>{ if(e.key==="Enter") $("#id-next").click(); }));
+
+/* ---------------- flow ---------------- */
+function buildSteps(){
+  const fw=FRAMEWORKS[state.fw];
+  $("#fl-steps").innerHTML = fw.elements.map(()=>"<i></i>").join("");
+}
+function renderStep(){
+  const fw=FRAMEWORKS[state.fw], el=fw.elements[state.step];
+  $$("#fl-steps i").forEach((d,i)=>{ d.className=""; if(i<state.step)d.classList.add("done"); if(i===state.step)d.classList.add("now"); });
+  $("#fl-kind").textContent = `${el.key} · Step ${state.step+1} of ${fw.elements.length}`;
+  $("#fl-elname").textContent = el.title;
+  $("#fl-elmean").textContent = el.mean;
+  $("#fl-hint").classList.remove("show");
+  const saved = state.answers[state.step]||[];
+  $("#fl-questions").innerHTML = el.q.map((q,i)=>`
+    <div class="q">
+      <div class="qlab"><span class="qnum">${i+1}.</span>${esc(q)}</div>
+      <textarea data-qi="${i}" placeholder="Write your answer…">${esc(saved[i]||"")}</textarea>
+    </div>`).join("");
+  $("#fl-back").textContent = state.step===0 ? "Back" : "Previous";
+  $("#fl-next").textContent = state.step===fw.elements.length-1 ? "See my card" : "Next";
+}
+function captureStep(){
+  const a=[]; $$("#fl-questions textarea").forEach(t=>a[+t.dataset.qi]=t.value.trim());
+  state.answers[state.step]=a;
+  return a;
+}
+$("#fl-back").addEventListener("click",()=>{
+  captureStep();
+  if(state.step===0){ show("screen-identity"); return; }
+  state.step--; renderStep();
+});
+$("#fl-next").addEventListener("click",()=>{
+  const a=captureStep();
+  if(a.some(x=>!x || !x.trim())){ $("#fl-hint").classList.add("show"); return; }
+  const fw=FRAMEWORKS[state.fw];
+  if(state.step<fw.elements.length-1){ state.step++; renderStep(); }
+  else { buildCard(); show("screen-card"); }
+});
+
+/* ---------------- teacher-voice template engine ---------------- */
+function teacherVoice(){
+  const fw=state.fw, first=state.name.split(" ")[0];
+  if(fw==="GROW"){
+    const understand=clip(ans(0,0));      // Gift q1
+    const example=clip(ans(2,0));          // Own q1
+    const gap=clip(ans(1,0));              // Rise q1
+    const openers=[
+      `${first}, this is honest, thoughtful reflection.`,
+      `${first}, you've really paused to think here.`,
+      `Nice work, ${first} — this shows real self-awareness.`,
+      `${first}, reflecting like this is exactly how learning sticks.`
+    ];
+    const strengths=[
+      understand ? `You can already name what's clicked — “${understand}” — and being able to say it means it's yours now.`
+                 : `You took the time to notice what's growing in your learning.`,
+      example ? `Linking it to real life — “${example}” — is the kind of thinking that makes ideas stick.`
+              : `Connecting learning to real life is a powerful habit — keep doing it.`
+    ];
+    const bridges=[
+      gap ? `And you were brave enough to admit a gap — “${gap}” — that honesty is where every improvement begins.`
+          : `Naming what's still unclear is the bravest part of reflecting, and you did it.`,
+      `Growth isn't about knowing everything today; it's about the next small step.`
+    ];
+    return `${pick(openers)} ${pick(strengths)} ${pick2(bridges)}`;
+  } else {
+    const feel=clip(ans(0,0));             // Acknowledge q1
+    const help=clip(ans(0,1));             // Acknowledge q2
+    const link=clip(ans(1,0));             // Connect q1
+    const openers=[
+      `${first}, responding to feedback like this takes real maturity.`,
+      `${first}, this is how feedback turns into progress.`,
+      `Well done, ${first} — you've taken the feedback seriously.`,
+      `${first}, not everyone slows down to process feedback like you just did.`
+    ];
+    const strengths=[
+      feel ? `You were honest that the feedback felt \u201c${feel}\u201d — and noticing that, instead of brushing it aside, is a strength.`
+           : `You were honest about how the feedback landed, which is where real growth starts.`,
+      help ? `You can already see how it helps — \u201c${help}\u201d.`
+           : `You're looking for what the feedback can teach you, not just whether it stings.`
+    ];
+    const bridges=[
+      link ? `Tying it back to \u201c${link}\u201d keeps your effort pointed at what matters.`
+           : `Connecting feedback to your goals keeps your effort purposeful.`,
+      `Feedback only works when it changes what we do next — and you're ready for that.`
+    ];
+    return `${pick(openers)} ${pick(strengths)} ${pick2(bridges)}`;
+  }
+}
+
+function focusBlock(){
+  const fw=state.fw, fi=FRAMEWORKS[fw].focusIndex;
+  if(fw==="GROW"){
+    const gap=ans(fi,0), step=ans(fi,1);
+    return {
+      label:"Your one focus before next lesson",
+      head: gap ? `Close the gap on: ${clip(gap,18)}` : "Take your next small step",
+      body: step ? `Your plan: ${step.replace(/[.!?]+$/,"")}. Start small, start this week — and check it off once it's clearer.`
+                 : `Pick one small action this week to move this forward, and tell someone you've done it.`
+    };
+  } else {
+    const change=ans(fi,0), measure=ans(fi,1);
+    return {
+      label:"Your one change from this feedback",
+      head: change ? `Do differently: ${clip(change,18)}` : "Choose one habit to adjust",
+      body: measure ? `You'll know it's working when ${lower1(measure.replace(/[.!?]+$/,""))}. Watch for that sign over the next few tasks.`
+                    : `Decide now how you'll know it's working, so you can spot your own progress.`
+    };
+  }
+}
+
+/* ---------------- build card ---------------- */
+function glyphSVG(theme){
+  if(theme==="grow"){
+    return `<svg class="glyph" viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M50 80V44"/><path d="M50 56c-12 0-20-8-22-22 14 0 22 8 22 22z"/><path d="M50 50c10-2 16-10 17-22-12 1-18 9-17 22z"/></svg>`;
+  }
+  return `<svg class="glyph" viewBox="0 0 100 100" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 50a28 28 0 1 1 9 20"/><path d="M31 56l-9 14-12-7"/></svg>`;
+}
+function buildCard(){
+  const fw=FRAMEWORKS[state.fw];
+  const dt=new Date().toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+  const voice=teacherVoice();
+  const focus=focusBlock();
+
+  const reflHTML = fw.elements.map((el,ei)=>`
+    <div class="refl">
+      <div class="rk"><em>${el.key}</em> &nbsp;${esc(el.title)}</div>
+      <div class="ra">
+        ${el.q.map((q,qi)=>`<div class="qq">${esc(q)}</div><div class="aa">${esc(ans(ei,qi))||"<em style='color:#9aa3b4'>—</em>"}</div>`).join("")}
+      </div>
+    </div>`).join("");
+
+  const wordColor = fw.theme==="grow" ? "" : "";
+  const card = $("#the-card");
+  card.className = "card "+fw.theme;
+  card.innerHTML = `
+    <div class="card-top">
+      ${glyphSVG(fw.theme)}
+      <div class="ribbon">${esc(fw.kind)}</div>
+      <div class="word">${fw.name}</div>
+      <div class="belief">${esc(fw.belief)}</div>
+      <div class="who">
+        <b>${esc(state.name)}</b><span>${esc(state.cls)}</span>
+        <span class="date">${dt}</span>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="sec-label">What you reflected on</div>
+      ${reflHTML}
+      <div class="sec-label">From your teacher</div>
+      <div class="voice">
+        <div class="qm">“</div>
+        <p>${esc(voice)}</p>
+        <div class="sig">— Your teacher</div>
+      </div>
+      <div class="focus">
+        <div class="fl">${esc(focus.label)}</div>
+        <h4>${esc(focus.head)}</h4>
+        <p>${esc(focus.body)}</p>
+      </div>
+    </div>
+    <div class="card-foot"><div class="mk"></div> Reflect · ${fw.name} card · keep this for revision</div>
+  `;
+
+  // stash a flat record for saving
+  card.dataset.voice = voice;
+  card.dataset.focus = focus.head+" — "+focus.body;
+
+  saveToSheet(voice, focus);
+}
+
+/* ---------------- save to Google Sheet ---------------- */
+function answersText(){
+  const fw=FRAMEWORKS[state.fw];
+  return fw.elements.map((el,ei)=>
+    `[${el.key}] ${el.title}\n`+
+    el.q.map((q,qi)=>`  • ${q}\n    ${ans(ei,qi)||"—"}`).join("\n")
+  ).join("\n\n");
+}
+function saveToSheet(voice, focus){
+  const st=$("#save-state");
+  if(!SCRIPT_URL){ st.className="save-state"; st.textContent="Tip for teacher: add your Apps Script URL to save responses."; return; }
+  const payload={
+    name:state.name, class:state.cls, framework:state.fw,
+    focusElement:FRAMEWORKS[state.fw].elements[FRAMEWORKS[state.fw].focusIndex].title,
+    answersText:answersText(), teacherVoice:voice, focusText:focus.head+" — "+focus.body
+  };
+  st.className="save-state"; st.textContent="Saving your reflection…";
+  fetch(SCRIPT_URL,{ method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(payload) })
+    .then(()=>{ st.className="save-state ok"; st.textContent="✓ Sent to your teacher."; })
+    .catch(()=>{ st.className="save-state warn"; st.textContent="Couldn't reach the server — your card is still yours to keep. Try again on better wifi."; });
+}
+
+/* ---------------- download PNG ---------------- */
+$("#card-download").addEventListener("click",async()=>{
+  const btn=$("#card-download"); const old=btn.textContent;
+  btn.textContent="Preparing…"; btn.disabled=true;
+  try{
+    await (document.fonts && document.fonts.ready);
+    const node=$("#the-card");
+    const canvas=await html2canvas(node,{scale:2, backgroundColor:null, useCORS:true, logging:false});
+    const link=document.createElement("a");
+    const safe=(state.name+"-"+state.fw).replace(/[^a-z0-9\-]+/gi,"_");
+    link.download=`Reflect_${safe}.png`;
+    link.href=canvas.toDataURL("image/png");
+    link.click();
+    btn.textContent="Saved ✓";
+  }catch(err){ btn.textContent="Try again"; }
+  setTimeout(()=>{ btn.textContent=old; btn.disabled=false; },1600);
+});
+
+/* ---------------- restart ---------------- */
+$("#card-restart").addEventListener("click",()=>{
+  state.step=0; state.answers={}; $("#in-name").value=""; $("#in-class").value="";
+  $("#save-state").textContent="";
+  show("screen-choose");
+});
+</script>
+</body>
+</html>
